@@ -16,6 +16,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 		this.options.CommandOptions.push({ Name: '-d, --directory_root [directory_root]', Description: 'Root directory to scan for modules (defaults to CWD).', Default: '' });
 		this.options.CommandOptions.push({ Name: '-b, --branch [branch]', Description: 'Git branch for GitHub raw URLs (defaults to master).', Default: 'master' });
 		this.options.CommandOptions.push({ Name: '-g, --github_org [github_org]', Description: 'GitHub organization for raw URLs (defaults to stevenvelozo).', Default: 'stevenvelozo' });
+		this.options.CommandOptions.push({ Name: '-x, --excluded_modules [excluded_modules]', Description: 'Comma-separated list of module names to exclude from the catalog and keyword index.  Merged with any ExcludedModules list in indoctrinate\'s loaded config file (e.g. .indoctrinate.config.json).', Default: '' });
 
 		this.options.Aliases.push('docs');
 		this.options.Aliases.push('prep-docs');
@@ -29,6 +30,15 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 		let tmpDirectoryRoot = this.CommandOptions.directory_root || this.fable.AppData.CWD;
 		let tmpBranch = this.CommandOptions.branch || 'master';
 		let tmpGitHubOrg = this.CommandOptions.github_org || 'stevenvelozo';
+
+		// Exclusion list passthrough. When set, both indoctrinate sub-commands
+		// get -x <list>.  Comma-separated; indoctrinate will merge this with
+		// any ExcludedModules entries in its loaded config file.
+		let tmpExcludedModulesArgs = [];
+		if (this.CommandOptions.excluded_modules && this.CommandOptions.excluded_modules.length > 0)
+		{
+			tmpExcludedModulesArgs = ['-x', this.CommandOptions.excluded_modules];
+		}
 
 		this.log.info(`Preparing documentation in [${tmpDocsFolder}]...`);
 
@@ -81,7 +91,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 						'-o', tmpCatalogFile,
 						'-b', tmpBranch,
 						'-g', tmpGitHubOrg
-					],
+					].concat(tmpExcludedModulesArgs),
 					{ cwd: this.fable.AppData.CWD },
 					fNext
 				);
@@ -98,7 +108,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 						'generate_keyword_index',
 						'-d', tmpDirectoryRoot,
 						'-o', tmpKeywordIndexFile
-					].concat(tmpExtraScanArgs),
+					].concat(tmpExtraScanArgs).concat(tmpExcludedModulesArgs),
 					{ cwd: this.fable.AppData.CWD },
 					fNext
 				);

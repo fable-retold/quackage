@@ -1,5 +1,5 @@
 {
-	"Generated": "2026-02-14T20:13:43.318Z",
+	"Generated": "2026-04-09T23:24:31.410Z",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
 	"Groups": [
@@ -9,28 +9,8 @@
 			"Description": "",
 			"Modules": [
 				{
-					"Name": "dist",
-					"Repo": "dist",
-					"Group": "debug",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
 					"Name": "output_docs",
 					"Repo": "output_docs",
-					"Group": "debug",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "testenv",
-					"Repo": "testenv",
 					"Group": "debug",
 					"Branch": "master",
 					"HasDocs": false,
@@ -90,22 +70,11 @@
 						"commands/documentation/indoctrinate-index.md",
 						"commands/documentation/indoctrinate.md",
 						"commands/documentation/prepare-docs.md",
+						"commands/documentation/prepare-local.md",
 						"commands/package-management/README.md",
 						"commands/package-management/lint.md",
 						"commands/package-management/luxuryupdatepackage.md",
 						"commands/package-management/updatepackage.md"
-					]
-				},
-				{
-					"Name": "css",
-					"Repo": "css",
-					"Group": "docs",
-					"Branch": "master",
-					"HasDocs": true,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": [
-						"css/docuserve.css"
 					]
 				}
 			]

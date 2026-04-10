@@ -179,6 +179,91 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				);
 			}.bind(this));
 
+		// Step 5: Stamp meaningful <title> and <meta name="description">
+		// into the freshly-injected index.html so social-card scrapers
+		// (Slack, etc.) read the module name + version instead of the
+		// generic "powered by pict-docuserve" boilerplate.
+		tmpAnticipate.anticipate(
+			function (fNext)
+			{
+				this.log.info(`###############################[ STEP 5: STAMP HTML METADATA ]###############################`);
+				try
+				{
+					let tmpIndexPath = libPath.join(tmpDocsFolder, 'index.html');
+					if (!libFS.existsSync(tmpIndexPath))
+					{
+						this.log.warn(`No index.html at [${tmpIndexPath}]; skipping metadata stamp.`);
+						return fNext();
+					}
+
+					let tmpVersionPath = libPath.join(tmpDocsFolder, '_version.json');
+					let tmpVersion = null;
+					if (libFS.existsSync(tmpVersionPath))
+					{
+						try { tmpVersion = JSON.parse(libFS.readFileSync(tmpVersionPath, 'utf8')); }
+						catch (e) { this.log.warn(`Could not parse _version.json: ${e.message}`); }
+					}
+
+					// Prefer the H1 from _cover.md as the display name (it
+					// has been hand-curated with proper casing and spacing);
+					// fall back to package.json name from _version.json.
+					let tmpDisplayName = '';
+					let tmpCoverPath = libPath.join(tmpDocsFolder, '_cover.md');
+					if (libFS.existsSync(tmpCoverPath))
+					{
+						let tmpCoverText = libFS.readFileSync(tmpCoverPath, 'utf8');
+						let tmpH1Match = tmpCoverText.match(/^#\s+(.+?)\s*$/m);
+						if (tmpH1Match)
+						{
+							tmpDisplayName = tmpH1Match[1].trim();
+						}
+					}
+					if (!tmpDisplayName && tmpVersion && tmpVersion.Name)
+					{
+						tmpDisplayName = tmpVersion.Name;
+					}
+					if (!tmpDisplayName)
+					{
+						this.log.warn(`No display name available (no _cover.md H1 and no _version.json); leaving stock metadata.`);
+						return fNext();
+					}
+
+					let tmpVersionString = (tmpVersion && tmpVersion.Version) ? ` v${tmpVersion.Version}` : '';
+					let tmpTitle = `${tmpDisplayName}${tmpVersionString} Documentation`;
+					let tmpDescription = tmpTitle;
+					if (tmpVersion && tmpVersion.Description)
+					{
+						tmpDescription = `${tmpTitle} — ${tmpVersion.Description}`;
+					}
+
+					let tmpHTML = libFS.readFileSync(tmpIndexPath, 'utf8');
+
+					// Escape for HTML attribute / element text contexts.
+					let fHTMLEscape = (pText) => String(pText)
+						.replace(/&/g, '&amp;')
+						.replace(/</g, '&lt;')
+						.replace(/>/g, '&gt;')
+						.replace(/"/g, '&quot;');
+
+					tmpHTML = tmpHTML.replace(
+						/<title>[\s\S]*?<\/title>/i,
+						`<title>${fHTMLEscape(tmpTitle)}</title>`
+					);
+					tmpHTML = tmpHTML.replace(
+						/<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i,
+						`<meta name="description" content="${fHTMLEscape(tmpDescription)}">`
+					);
+
+					libFS.writeFileSync(tmpIndexPath, tmpHTML);
+					this.log.info(`Stamped index.html metadata: "${tmpTitle}"`);
+				}
+				catch (pError)
+				{
+					this.log.warn(`Failed to stamp index.html metadata: ${pError.message}`);
+				}
+				return fNext();
+			}.bind(this));
+
 		return tmpAnticipate.wait(
 			function (pError)
 			{

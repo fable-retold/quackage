@@ -1,5 +1,5 @@
 {
-	"Generated": "2026-04-09T23:24:31.410Z",
+	"Generated": "2026-04-10T03:21:01.619Z",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
 	"Groups": [
@@ -75,6 +75,18 @@
 						"commands/package-management/lint.md",
 						"commands/package-management/luxuryupdatepackage.md",
 						"commands/package-management/updatepackage.md"
+					]
+				},
+				{
+					"Name": "css",
+					"Repo": "css",
+					"Group": "docs",
+					"Branch": "master",
+					"HasDocs": true,
+					"HasCover": false,
+					"Sidebar": [],
+					"DocFiles": [
+						"css/docuserve.css"
 					]
 				}
 			]

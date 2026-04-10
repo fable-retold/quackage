@@ -1,6 +1,6 @@
 {
     "name": "quackage",
-    "version": "1.0.66",
+    "version": "1.0.67",
     "description": "Building.  Testing.  Quacking.  Reloading.",
     "main": "source/Quackage-CLIProgram.js",
     "scripts": {
@@ -60,7 +60,7 @@
         "gulp-env": "^0.4.0",
         "gulp-sourcemaps": "^3.0.0",
         "gulp-terser": "^2.1.0",
-        "indoctrinate": "^1.0.9",
+        "indoctrinate": "^1.0.10",
         "jsdoc": "^4.0.5",
         "mocha": "10.4.0",
         "npm-check-updates": "^18.0.1",

@@ -1,6 +1,7 @@
 const libCommandLineCommand = require('pict-service-commandlineutility').ServiceCommandLineCommand;
 const libFS = require('fs');
 const libPath = require('path');
+const libChildProcess = require('child_process');
 
 class QuackageCommandPrepareDocs extends libCommandLineCommand
 {
@@ -114,11 +115,59 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				);
 			}.bind(this));
 
-		// Step 3: Inject pict-docuserve assets
+		// Step 3: Write _version.json version placard sidecar
 		tmpAnticipate.anticipate(
 			function (fNext)
 			{
-				this.log.info(`###############################[ STEP 3: DOCUSERVE INJECT ]###############################`);
+				this.log.info(`###############################[ STEP 3: VERSION PLACARD ]###############################`);
+				try
+				{
+					let tmpPackageJsonPath = libPath.join(tmpDirectoryRoot, 'package.json');
+					if (!libFS.existsSync(tmpPackageJsonPath))
+					{
+						this.log.warn(`No package.json at [${tmpPackageJsonPath}]; skipping _version.json generation.`);
+						return fNext();
+					}
+					let tmpPackage = JSON.parse(libFS.readFileSync(tmpPackageJsonPath, 'utf8'));
+
+					let tmpGitCommit = null;
+					try
+					{
+						tmpGitCommit = libChildProcess.execSync('git rev-parse --short HEAD',
+							{ cwd: tmpDirectoryRoot, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+					}
+					catch (pGitErr)
+					{
+						// Non-git repo or no commits yet — omit GitCommit.
+					}
+
+					let tmpVersionPayload = {
+						Name: tmpPackage.name || '',
+						Version: tmpPackage.version || '',
+						Description: tmpPackage.description || '',
+						GeneratedAt: new Date().toISOString()
+					};
+					if (tmpGitCommit)
+					{
+						tmpVersionPayload.GitCommit = tmpGitCommit;
+					}
+
+					let tmpVersionFile = libPath.join(tmpDocsFolder, '_version.json');
+					libFS.writeFileSync(tmpVersionFile, JSON.stringify(tmpVersionPayload, null, '\t'));
+					this.log.info(`Wrote version placard: ${tmpVersionFile} (${tmpVersionPayload.Name} v${tmpVersionPayload.Version}${tmpGitCommit ? ' @ ' + tmpGitCommit : ''})`);
+				}
+				catch (pError)
+				{
+					this.log.warn(`Failed to write _version.json: ${pError.message}`);
+				}
+				return fNext();
+			}.bind(this));
+
+		// Step 4: Inject pict-docuserve assets
+		tmpAnticipate.anticipate(
+			function (fNext)
+			{
+				this.log.info(`###############################[ STEP 4: DOCUSERVE INJECT ]###############################`);
 				this.fable.QuackageProcess.execute(
 					tmpDocuserveLocation,
 					[

@@ -1,6 +1,6 @@
 {
     "name": "quackage",
-    "version": "1.0.68",
+    "version": "1.1.0",
     "description": "Building.  Testing.  Quacking.  Reloading.",
     "main": "source/Quackage-CLIProgram.js",
     "scripts": {
@@ -65,7 +65,7 @@
         "mocha": "10.4.0",
         "npm-check-updates": "^18.0.1",
         "nyc": "^15.1.0",
-        "pict-docuserve": "^0.0.32",
+        "pict-docuserve": "^0.1.1",
         "pict-service-commandlineutility": "^1.0.19",
         "retold-harness": "^1.1.6",
         "vinyl-buffer": "^1.0.1",

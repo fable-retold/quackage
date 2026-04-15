@@ -66,7 +66,7 @@
         "npm-check-updates": "^18.0.1",
         "nyc": "^15.1.0",
         "pict-service-commandlineutility": "^1.0.19",
-        "retold-harness": "^1.1.6",
+        "retold-harness": "^1.1.8",
         "vinyl-buffer": "^1.0.1",
         "vinyl-source-stream": "^2.0.0"
     },

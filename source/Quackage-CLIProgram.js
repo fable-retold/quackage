@@ -42,6 +42,12 @@ let _Pict = new libCLIProgram(
 		require('./commands/Quackage-Command-ListTemplates.js'),
 		require('./commands/Quackage-Command-BuildTemplates.js'),
 
+		// npm + GHCR release pipeline (postversion / postpublish hooks
+		// + one-shot release shortcuts). See Quackage-Command-Release.js
+		// for the BUILD_DOCKER opt-in convention.
+		require('./commands/Quackage-Command-Release.js'),
+		require('./commands/Quackage-Command-DockerInit.js'),
+
 		// Stricture
 		require('./commands/stricture//Quackage-Command-Stricture-Compile.js'),
 		require('./commands/stricture/Quackage-Command-StrictureLegacy.js'),

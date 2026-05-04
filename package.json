@@ -65,7 +65,7 @@
         "mocha": "10.4.0",
         "npm-check-updates": "^18.0.1",
         "nyc": "^15.1.0",
-        "pict-provider-theme": "^0.0.3",
+        "pict-provider-theme": "^0.0.4",
         "pict-service-commandlineutility": "^1.0.19",
         "retold-harness": "^1.1.10",
         "vinyl-buffer": "^1.0.1",

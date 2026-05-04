@@ -2,6 +2,8 @@ const libPict = require('pict');
 const libFS = require('fs');
 const libPath = require('path');
 const libHTTP = require('http');
+const libHTTPS = require('https');
+const libURL = require('url');
 
 const libFable = require('fable');
 const libBookstoreSchema = require('retold-harness/source/schemas/Retold-Harness-Service-Schema-Bookstore.js');
@@ -533,6 +535,235 @@ ${tmpExampleListItems}		</ul>
 			});
 	}
 
+	// --- Serve static + reverse-proxy a configured upstream ---
+
+	/**
+	 * Serve example files out of pExamplesFolder, but reverse-proxy any request
+	 * whose path starts with one of pProxyConfig.paths to pProxyConfig.upstream.
+	 *
+	 * Used by mode='proxy' so cookie-credentialed APIs (Headlight, etc.) appear
+	 * same-origin to the browser and CORS doesn't get in the way.
+	 */
+	serveStaticWithProxy(pExamplesFolder, pIndexHTML, pPort, pExamples, pProjectName, pProxyConfig, fCallback)
+	{
+		const tmpUpstreamParsed = libURL.parse(pProxyConfig.upstream);
+		const tmpUpstreamClient = (tmpUpstreamParsed.protocol === 'https:') ? libHTTPS : libHTTP;
+		const tmpUpstreamHost = tmpUpstreamParsed.host;
+		const tmpUpstreamOrigin = `${tmpUpstreamParsed.protocol}//${tmpUpstreamHost}`;
+
+		const tmpShouldProxy = (pRequestPath) =>
+		{
+			for (let i = 0; i < pProxyConfig.paths.length; i++)
+			{
+				if (pRequestPath === pProxyConfig.paths[i] || pRequestPath.indexOf(pProxyConfig.paths[i]) === 0)
+				{
+					return true;
+				}
+			}
+			return false;
+		};
+
+		const tmpRewriteSetCookie = (pCookies) =>
+		{
+			if (!pCookies) { return pCookies; }
+			const tmpArray = Array.isArray(pCookies) ? pCookies : [pCookies];
+			return tmpArray.map((pCookie) => String(pCookie)
+				.replace(/;\s*Domain=[^;]+/i, '')
+				.replace(/;\s*Secure/i, ''));
+		};
+
+		const tmpProxyRequest = (pRequest, pResponse) =>
+		{
+			const tmpProxyHeaders = Object.assign({}, pRequest.headers);
+			if (pProxyConfig.rewriteOrigin)
+			{
+				tmpProxyHeaders.host = tmpUpstreamHost;
+				if (tmpProxyHeaders.origin)  { tmpProxyHeaders.origin  = tmpUpstreamOrigin; }
+				if (tmpProxyHeaders.referer) { tmpProxyHeaders.referer = tmpUpstreamOrigin + '/'; }
+			}
+			delete tmpProxyHeaders['accept-encoding'];
+
+			const tmpProxyOptions =
+			{
+				protocol: tmpUpstreamParsed.protocol,
+				hostname: tmpUpstreamParsed.hostname,
+				port:     tmpUpstreamParsed.port || (tmpUpstreamParsed.protocol === 'https:' ? 443 : 80),
+				method:   pRequest.method,
+				path:     pRequest.url,
+				headers:  tmpProxyHeaders
+			};
+
+			const tmpProxyReq = tmpUpstreamClient.request(tmpProxyOptions, (pProxyRes) =>
+			{
+				const tmpResponseHeaders = Object.assign({}, pProxyRes.headers);
+				if (pProxyConfig.rewriteCookies && tmpResponseHeaders['set-cookie'])
+				{
+					tmpResponseHeaders['set-cookie'] = tmpRewriteSetCookie(tmpResponseHeaders['set-cookie']);
+				}
+				pResponse.writeHead(pProxyRes.statusCode || 502, tmpResponseHeaders);
+				pProxyRes.pipe(pResponse);
+			});
+
+			tmpProxyReq.on('error', (pError) =>
+			{
+				this.log.error(`Proxy upstream error for ${pRequest.method} ${pRequest.url}: ${pError.message}`);
+				if (!pResponse.headersSent)
+				{
+					pResponse.writeHead(502, { 'Content-Type': 'text/plain' });
+				}
+				pResponse.end(`Bad gateway: ${pError.message}`);
+			});
+
+			pRequest.pipe(tmpProxyReq);
+		};
+
+		const tmpServeStaticFile = (pRequest, pResponse) =>
+		{
+			let tmpRequestURL = pRequest.url.split('?')[0];
+
+			if (tmpRequestURL === '/' || tmpRequestURL === '/index.html')
+			{
+				pResponse.writeHead(200, { 'Content-Type': 'text/html' });
+				pResponse.end(pIndexHTML);
+				return;
+			}
+
+			let tmpFilePath = libPath.join(pExamplesFolder, decodeURIComponent(tmpRequestURL));
+			if (!tmpFilePath.startsWith(pExamplesFolder))
+			{
+				pResponse.writeHead(403);
+				pResponse.end('Forbidden');
+				return;
+			}
+			if (libFS.existsSync(tmpFilePath) && libFS.statSync(tmpFilePath).isDirectory())
+			{
+				tmpFilePath = libPath.join(tmpFilePath, 'index.html');
+			}
+			if (!libFS.existsSync(tmpFilePath))
+			{
+				pResponse.writeHead(404);
+				pResponse.end('Not Found');
+				return;
+			}
+
+			let tmpExtension = libPath.extname(tmpFilePath).toLowerCase();
+			let tmpMimeType = this.getMimeType(tmpExtension);
+			try
+			{
+				let tmpContent = libFS.readFileSync(tmpFilePath);
+				pResponse.writeHead(200, { 'Content-Type': tmpMimeType });
+				pResponse.end(tmpContent);
+			}
+			catch (pReadError)
+			{
+				pResponse.writeHead(500);
+				pResponse.end('Internal Server Error');
+			}
+		};
+
+		const tmpServer = libHTTP.createServer((pRequest, pResponse) =>
+		{
+			const tmpPath = pRequest.url.split('?')[0];
+			if (tmpShouldProxy(tmpPath))
+			{
+				tmpProxyRequest(pRequest, pResponse);
+			}
+			else
+			{
+				tmpServeStaticFile(pRequest, pResponse);
+			}
+		});
+
+		tmpServer.listen(pPort, () =>
+		{
+			this.log.info(`##############################################`);
+			this.log.info(`  Example server running at http://localhost:${pPort}/`);
+			this.log.info(`  Project: ${pProjectName}`);
+			this.log.info(`  Proxy upstream: ${pProxyConfig.upstream}`);
+			this.log.info(`  Proxied paths:  ${pProxyConfig.paths.join(', ')}`);
+			this.log.info(`  Serving ${pExamples.length} example(s):`);
+			for (let i = 0; i < pExamples.length; i++)
+			{
+				this.log.info(`    - ${pExamples[i].DisplayName}: http://localhost:${pPort}/${pExamples[i].RelativePath}`);
+			}
+			this.log.info(`##############################################`);
+			this.log.info(`Press Ctrl+C to stop.`);
+		});
+
+		tmpServer.on('error', (pError) =>
+		{
+			if (pError.code === 'EADDRINUSE')
+			{
+				this.log.error(`Port ${pPort} is already in use.  Try specifying a different port with -p.`);
+			}
+			else
+			{
+				this.log.error(`Server error: ${pError.message}`);
+			}
+			return fCallback(pError);
+		});
+	}
+
+	// --- Per-project examples configuration ---
+
+	/**
+	 * Resolve the host project's examples configuration from its package.json.
+	 * Reads `quackageExamples` (preferred) or `quack.examples` (alias).
+	 *
+	 * Recognised shapes:
+	 *
+	 *   "quackageExamples": { "mode": "bookstore" }   // default — Meadow + SQLite + bookstore data
+	 *   "quackageExamples": { "mode": "static"   }    // serve files only, no API
+	 *   "quackageExamples": {
+	 *       "mode": "proxy",
+	 *       "proxy": {
+	 *           "upstream": "https://fieldbook.qa.headlight.com",
+	 *           "paths": ["/1.0/", "/CheckSession", "/Authenticate", "/Report/"],
+	 *           "rewriteCookies": true,
+	 *           "rewriteOrigin":  true
+	 *       }
+	 *   }
+	 *
+	 * Defaults (mode='proxy'):
+	 *   paths           = ["/1.0/"]
+	 *   rewriteCookies  = true     (strip Domain= and Secure so localhost keeps the session)
+	 *   rewriteOrigin   = true     (rewrite Host/Origin/Referer to the upstream)
+	 */
+	resolveExamplesConfig()
+	{
+		const tmpPackage = (this.fable && this.fable.AppData && this.fable.AppData.Package) || {};
+		const tmpRaw = tmpPackage.quackageExamples
+			|| (tmpPackage.quack && tmpPackage.quack.examples)
+			|| {};
+
+		const tmpMode = (typeof tmpRaw.mode === 'string') ? tmpRaw.mode.toLowerCase() : 'bookstore';
+		const tmpResolved = { mode: tmpMode };
+
+		if (tmpMode === 'proxy')
+		{
+			const tmpProxy = tmpRaw.proxy || {};
+			tmpResolved.proxy =
+			{
+				upstream:       (typeof tmpProxy.upstream === 'string' && tmpProxy.upstream) ? tmpProxy.upstream.replace(/\/+$/, '') : null,
+				paths:          (Array.isArray(tmpProxy.paths) && tmpProxy.paths.length) ? tmpProxy.paths.slice() : ['/1.0/'],
+				rewriteCookies: (tmpProxy.rewriteCookies !== false),
+				rewriteOrigin:  (tmpProxy.rewriteOrigin !== false)
+			};
+			// Allow env-var override for the upstream so devs can switch envs without
+			// editing package.json: `UPSTREAM=https://fieldbook.headlight.com npx quack examples`.
+			if (process.env.QUACKAGE_PROXY_UPSTREAM)
+			{
+				tmpResolved.proxy.upstream = process.env.QUACKAGE_PROXY_UPSTREAM.replace(/\/+$/, '');
+			}
+			else if (process.env.UPSTREAM)
+			{
+				tmpResolved.proxy.upstream = process.env.UPSTREAM.replace(/\/+$/, '');
+			}
+		}
+
+		return tmpResolved;
+	}
+
 	// --- Serve examples ---
 
 	serveExamples(pExamplesFolder, pPort, fCallback)
@@ -555,7 +786,28 @@ ${tmpExampleListItems}		</ul>
 
 		let tmpIndexHTML = this.generateIndexHTML(tmpProjectName, tmpExamples, tmpPort);
 
-		// Initialize the bookstore API (retold-harness + SQLite)
+		const tmpConfig = this.resolveExamplesConfig();
+
+		if (tmpConfig.mode === 'proxy')
+		{
+			if (!tmpConfig.proxy.upstream)
+			{
+				this.log.error(`quackageExamples.mode is 'proxy' but no upstream URL was configured.`);
+				this.log.error(`Set quackageExamples.proxy.upstream in package.json (or QUACKAGE_PROXY_UPSTREAM / UPSTREAM env var).`);
+				return fCallback(new Error('Proxy mode requires an upstream.'));
+			}
+			this.log.info(`Examples mode: proxy → ${tmpConfig.proxy.upstream}`);
+			this.log.info(`Proxying paths: ${tmpConfig.proxy.paths.join(', ')}`);
+			return this.serveStaticWithProxy(tmpExamplesFolder, tmpIndexHTML, tmpPort, tmpExamples, tmpProjectName, tmpConfig.proxy, fCallback);
+		}
+
+		if (tmpConfig.mode === 'static')
+		{
+			this.log.info(`Examples mode: static (no API)`);
+			return this.serveStaticHTTP(tmpExamplesFolder, tmpIndexHTML, tmpPort, fCallback);
+		}
+
+		// Default: bookstore API
 		this.log.info(`Initializing bookstore API with SQLite ...`);
 		this.initializeBookstoreAPI(tmpPort, tmpExamplesFolder,
 			(pError, pHarnessFable) =>

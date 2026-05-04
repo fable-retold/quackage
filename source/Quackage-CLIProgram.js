@@ -65,8 +65,9 @@ let _Pict = new libCLIProgram(
 		require('./commands/html_example_serving/Quackage-Command-ExamplesServe.js'),
 		require('./commands/html_example_serving/Quackage-Command-Examples.js'),
 
-		// Theme bundle compilation (pict-provider-theme)
-		require('pict-provider-theme/source/cli/Quackage-Command-ThemeBuild.js')
+		// Theme bundle compilation + screenshot tooling (pict-provider-theme)
+		require('pict-provider-theme/source/cli/Quackage-Command-ThemeBuild.js'),
+		require('pict-provider-theme/source/cli/Quackage-Command-ThemeScreenshot.js')
 	]);
 
 // Instantiate the file persistence service

@@ -209,8 +209,8 @@ class QuackageExampleService extends libPict.ServiceProviderBase
 
 		/* --- Header Bar --- */
 		.pict-example-header { display: flex; align-items: stretch; background: #264653; border-bottom: 3px solid #E76F51; }
-		.pict-example-badge { background: #E76F51; color: #fff; padding: 0.6rem 1rem; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem; }
-		.pict-example-badge svg { width: 14px; height: 14px; fill: #fff; flex-shrink: 0; }
+		.pict-example-badge { background: #E76F51; color: var(--theme-color-background-panel, #fff); padding: 0.6rem 1rem; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 0.5rem; }
+		.pict-example-badge svg { width: 14px; height: 14px; fill: var(--theme-color-background-panel, #fff); flex-shrink: 0; }
 		.pict-example-app-name { padding: 0.6rem 1rem; color: #FAEDCD; font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; }
 		.pict-example-module { margin-left: auto; padding: 0.6rem 1rem; color: #D4A373; font-size: 0.75rem; display: flex; align-items: center; letter-spacing: 0.03em; }
 
@@ -221,7 +221,7 @@ class QuackageExampleService extends libPict.ServiceProviderBase
 
 		/* --- Example List --- */
 		.example-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-		.example-list li { background: #fff; border: 1px solid #D4A373; border-left: 4px solid #E76F51; border-radius: 4px; transition: border-color 0.15s, box-shadow 0.15s; }
+		.example-list li { background: var(--theme-color-background-panel, #fff); border: 1px solid #D4A373; border-left: 4px solid #E76F51; border-radius: 4px; transition: border-color 0.15s, box-shadow 0.15s; }
 		.example-list li:hover { border-left-color: #264653; box-shadow: 0 2px 8px rgba(38,70,83,0.1); }
 		.example-list a { display: block; padding: 0.75rem 1rem; text-decoration: none; color: #264653; font-weight: 500; font-size: 0.95rem; }
 		.example-list a:hover { color: #E76F51; }

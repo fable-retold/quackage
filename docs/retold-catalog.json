@@ -1,236 +1,179 @@
 {
-	"Generated": "2026-04-10T17:27:38.493Z",
+	"Generated": "2026-05-22T05:36:48.699Z",
+	"Mode": "module",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
-	"Groups": [
-		{
-			"Name": "Debug",
-			"Key": "debug",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "output_docs",
-					"Repo": "output_docs",
-					"Group": "debug",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		},
-		{
-			"Name": "Dist",
-			"Key": "dist",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "indoctrinate_content_staging",
-					"Repo": "indoctrinate_content_staging",
-					"Group": "dist",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		},
-		{
-			"Name": "Docs",
-			"Key": "docs",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "commands",
-					"Repo": "commands",
-					"Group": "docs",
-					"Branch": "master",
-					"HasDocs": true,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": [
-						"commands/boilerplate/README.md",
-						"commands/boilerplate/boilerplate.md",
-						"commands/boilerplate/buildtemplates.md",
-						"commands/boilerplate/listtemplates.md",
-						"commands/building/README.md",
-						"commands/building/build.md",
-						"commands/building/copy-files-from-to.md",
-						"commands/building/run-mocha-tests.md",
-						"commands/compiling/README.md",
-						"commands/compiling/assemble_json_views.md",
-						"commands/compiling/stricture-compile.md",
-						"commands/compiling/stricture-legaacy.md",
-						"commands/documentation/README.md",
-						"commands/documentation/docs-serve.md",
-						"commands/documentation/docuserve-inject.md",
-						"commands/documentation/generate-documentation.md",
-						"commands/documentation/indoctrinate-index.md",
-						"commands/documentation/indoctrinate.md",
-						"commands/documentation/prepare-docs.md",
-						"commands/documentation/prepare-local.md",
-						"commands/package-management/README.md",
-						"commands/package-management/lint.md",
-						"commands/package-management/luxuryupdatepackage.md",
-						"commands/package-management/updatepackage.md"
-					]
-				},
-				{
-					"Name": "css",
-					"Repo": "css",
-					"Group": "docs",
-					"Branch": "master",
-					"HasDocs": true,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": [
-						"css/docuserve.css"
-					]
-				}
-			]
-		},
-		{
-			"Name": "Source",
-			"Key": "source",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "commands",
-					"Repo": "commands",
-					"Group": "source",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "services",
-					"Repo": "services",
-					"Group": "source",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		},
-		{
-			"Name": "Templates",
-			"Key": "templates",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "cli-utility",
-					"Repo": "cli-utility",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "fableservice",
-					"Repo": "fableservice",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "luxury",
-					"Repo": "luxury",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "luxury-mysql",
-					"Repo": "luxury-mysql",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "node-gitignore",
-					"Repo": "node-gitignore",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "pictview",
-					"Repo": "pictview",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "pictviewunittest",
-					"Repo": "pictviewunittest",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "pictwebapp",
-					"Repo": "pictwebapp",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "unittest",
-					"Repo": "unittest",
-					"Group": "templates",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		},
-		{
-			"Name": "Test",
-			"Key": "test",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "packagefiles",
-					"Repo": "packagefiles",
-					"Group": "test",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		}
-	]
+	"Module": {
+		"Name": "quackage",
+		"Repo": "quackage",
+		"Group": "",
+		"Branch": "master",
+		"HasDocs": true,
+		"HasCover": true,
+		"Sidebar": [
+			{
+				"Title": "Quackage",
+				"Path": "README.md"
+			},
+			{
+				"Title": "Package Management",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "commands/package-management/README.md"
+					},
+					{
+						"Title": "updatepackage",
+						"Path": "commands/package-management/updatepackage.md"
+					},
+					{
+						"Title": "luxuryupdatepackage",
+						"Path": "commands/package-management/luxuryupdatepackage.md"
+					},
+					{
+						"Title": "lint",
+						"Path": "commands/package-management/lint.md"
+					}
+				]
+			},
+			{
+				"Title": "Boilerplate",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "commands/boilerplate/README.md"
+					},
+					{
+						"Title": "boilerplate",
+						"Path": "commands/boilerplate/boilerplate.md"
+					},
+					{
+						"Title": "listtemplates",
+						"Path": "commands/boilerplate/listtemplates.md"
+					},
+					{
+						"Title": "buildtemplates",
+						"Path": "commands/boilerplate/buildtemplates.md"
+					}
+				]
+			},
+			{
+				"Title": "Compiling",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "commands/compiling/README.md"
+					},
+					{
+						"Title": "stricture-compile",
+						"Path": "commands/compiling/stricture-compile.md"
+					},
+					{
+						"Title": "stricture-legaacy",
+						"Path": "commands/compiling/stricture-legaacy.md"
+					},
+					{
+						"Title": "assemble_json_views",
+						"Path": "commands/compiling/assemble_json_views.md"
+					}
+				]
+			},
+			{
+				"Title": "Building",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "commands/building/README.md"
+					},
+					{
+						"Title": "build",
+						"Path": "commands/building/build.md"
+					},
+					{
+						"Title": "copy-files-from-to",
+						"Path": "commands/building/copy-files-from-to.md"
+					},
+					{
+						"Title": "run-mocha-tests",
+						"Path": "commands/building/run-mocha-tests.md"
+					}
+				]
+			},
+			{
+				"Title": "Documentation",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "commands/documentation/README.md"
+					},
+					{
+						"Title": "generate-documentation",
+						"Path": "commands/documentation/generate-documentation.md"
+					},
+					{
+						"Title": "indoctrinate",
+						"Path": "commands/documentation/indoctrinate.md"
+					},
+					{
+						"Title": "indoctrinate-index",
+						"Path": "commands/documentation/indoctrinate-index.md"
+					},
+					{
+						"Title": "docuserve-inject",
+						"Path": "commands/documentation/docuserve-inject.md"
+					},
+					{
+						"Title": "prepare-docs",
+						"Path": "commands/documentation/prepare-docs.md"
+					},
+					{
+						"Title": "prepare-local",
+						"Path": "commands/documentation/prepare-local.md"
+					},
+					{
+						"Title": "docs-serve",
+						"Path": "commands/documentation/docs-serve.md"
+					}
+				]
+			}
+		],
+		"DocFiles": [
+			".nojekyll",
+			"README.md",
+			"_brand.json",
+			"_cover.md",
+			"_sidebar.md",
+			"_topbar.md",
+			"_version.json",
+			"commands/boilerplate/README.md",
+			"commands/boilerplate/boilerplate.md",
+			"commands/boilerplate/buildtemplates.md",
+			"commands/boilerplate/listtemplates.md",
+			"commands/building/README.md",
+			"commands/building/build.md",
+			"commands/building/copy-files-from-to.md",
+			"commands/building/run-mocha-tests.md",
+			"commands/compiling/README.md",
+			"commands/compiling/assemble_json_views.md",
+			"commands/compiling/stricture-compile.md",
+			"commands/compiling/stricture-legaacy.md",
+			"commands/documentation/README.md",
+			"commands/documentation/docs-serve.md",
+			"commands/documentation/docuserve-inject.md",
+			"commands/documentation/generate-documentation.md",
+			"commands/documentation/indoctrinate-index.md",
+			"commands/documentation/indoctrinate.md",
+			"commands/documentation/prepare-docs.md",
+			"commands/documentation/prepare-local.md",
+			"commands/package-management/README.md",
+			"commands/package-management/lint.md",
+			"commands/package-management/luxuryupdatepackage.md",
+			"commands/package-management/updatepackage.md",
+			"errorpage.md",
+			"index.html",
+			"retold-catalog.json",
+			"retold-keyword-index.json"
+		]
+	},
+	"Groups": []
 }

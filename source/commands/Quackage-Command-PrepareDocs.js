@@ -18,6 +18,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 		this.options.CommandOptions.push({ Name: '-b, --branch [branch]', Description: 'Git branch for GitHub raw URLs (defaults to master).', Default: 'master' });
 		this.options.CommandOptions.push({ Name: '-g, --github_org [github_org]', Description: 'GitHub organization for raw URLs (defaults to stevenvelozo).', Default: 'stevenvelozo' });
 		this.options.CommandOptions.push({ Name: '-x, --excluded_modules [excluded_modules]', Description: 'Comma-separated list of module names to exclude from the catalog and keyword index.  Merged with any ExcludedModules list in indoctrinate\'s loaded config file (e.g. .indoctrinate.config.json).', Default: '' });
+		this.options.CommandOptions.push({ Name: '--docs_mode [docs_mode]', Description: 'Documentation scan mode: "module" (one module\'s docs/) or "ecosystem" (a folder of <group>/<module> repos).  Auto-detected when omitted — "module" when the scan root has a package.json, else "ecosystem".', Default: '' });
 
 		this.options.Aliases.push('docs');
 		this.options.Aliases.push('prep-docs');
@@ -77,6 +78,26 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 			tmpExtraScanArgs = ['-e', tmpDocsContentRoot];
 		}
 
+		// Documentation mode: "module" (a single module's docs/) vs
+		// "ecosystem" (a folder of <group>/<module> repos).  Auto-detected
+		// from whether the scan root is itself a package (has package.json);
+		// the --docs_mode option overrides.
+		let tmpDocsMode = (this.CommandOptions.docs_mode === 'module' || this.CommandOptions.docs_mode === 'ecosystem')
+			? this.CommandOptions.docs_mode
+			: (libFS.existsSync(libPath.join(tmpResolvedDirectoryRoot, 'package.json')) ? 'module' : 'ecosystem');
+		this.log.info(`Documentation mode: [${tmpDocsMode}] (scan root [${tmpResolvedDirectoryRoot}]).`);
+
+		// In single-module mode the catalog + keyword index describe one
+		// module — pass --single_module to indoctrinate.  The docs folder is
+		// already inside the scanned module root, so the -e extra scan is
+		// redundant there (and its content would lack the docs/ path segment).
+		let tmpSingleModuleArgs = [];
+		if (tmpDocsMode === 'module')
+		{
+			tmpSingleModuleArgs = ['-s'];
+			tmpExtraScanArgs = [];
+		}
+
 		let tmpAnticipate = this.fable.newAnticipate();
 
 		// Step 1: Build and stage flagged example applications into the docs
@@ -113,7 +134,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 						'-o', tmpCatalogFile,
 						'-b', tmpBranch,
 						'-g', tmpGitHubOrg
-					].concat(tmpExcludedModulesArgs),
+					].concat(tmpSingleModuleArgs).concat(tmpExcludedModulesArgs),
 					{ cwd: this.fable.AppData.CWD },
 					fNext
 				);
@@ -130,7 +151,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 						'generate_keyword_index',
 						'-d', tmpDirectoryRoot,
 						'-o', tmpKeywordIndexFile
-					].concat(tmpExtraScanArgs).concat(tmpExcludedModulesArgs),
+					].concat(tmpSingleModuleArgs).concat(tmpExtraScanArgs).concat(tmpExcludedModulesArgs),
 					{ cwd: this.fable.AppData.CWD },
 					fNext
 				);

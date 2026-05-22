@@ -79,11 +79,32 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 
 		let tmpAnticipate = this.fable.newAnticipate();
 
-		// Step 1: Generate the documentation catalog
+		// Step 1: Build and stage flagged example applications into the docs
+		// folder.  Runs first so any generated example index / quick-links
+		// markdown is on disk before the keyword index scans it into search.
+		// This is a clean no-op for modules with no flagged example
+		// applications, so it is safe to run everywhere prepare-docs runs.
 		tmpAnticipate.anticipate(
 			function (fNext)
 			{
-				this.log.info(`###############################[ STEP 1: INDOCTRINATE CATALOG ]###############################`);
+				this.log.info(`###############################[ STEP 1: STAGE EXAMPLE APPLICATIONS ]###############################`);
+				this.fable.QuackageProcess.execute(
+					tmpDocuserveLocation,
+					[
+						'stage-examples',
+						tmpDocsFolder,
+						'-m', tmpDirectoryRoot
+					],
+					{ cwd: this.fable.AppData.CWD },
+					fNext
+				);
+			}.bind(this));
+
+		// Step 2: Generate the documentation catalog
+		tmpAnticipate.anticipate(
+			function (fNext)
+			{
+				this.log.info(`###############################[ STEP 2: INDOCTRINATE CATALOG ]###############################`);
 				this.fable.QuackageProcess.execute(
 					tmpIndoctrinateLocation,
 					[
@@ -98,11 +119,11 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				);
 			}.bind(this));
 
-		// Step 2: Generate the keyword search index
+		// Step 3: Generate the keyword search index
 		tmpAnticipate.anticipate(
 			function (fNext)
 			{
-				this.log.info(`###############################[ STEP 2: KEYWORD INDEX ]###############################`);
+				this.log.info(`###############################[ STEP 3: KEYWORD INDEX ]###############################`);
 				this.fable.QuackageProcess.execute(
 					tmpIndoctrinateLocation,
 					[
@@ -115,11 +136,11 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				);
 			}.bind(this));
 
-		// Step 3: Write _version.json version placard sidecar
+		// Step 4: Write _version.json version placard sidecar
 		tmpAnticipate.anticipate(
 			function (fNext)
 			{
-				this.log.info(`###############################[ STEP 3: VERSION PLACARD ]###############################`);
+				this.log.info(`###############################[ STEP 4: VERSION PLACARD ]###############################`);
 				try
 				{
 					let tmpPackageJsonPath = libPath.join(tmpDirectoryRoot, 'package.json');
@@ -163,11 +184,11 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				return fNext();
 			}.bind(this));
 
-		// Step 4: Inject pict-docuserve assets
+		// Step 5: Inject pict-docuserve assets
 		tmpAnticipate.anticipate(
 			function (fNext)
 			{
-				this.log.info(`###############################[ STEP 4: DOCUSERVE INJECT ]###############################`);
+				this.log.info(`###############################[ STEP 5: DOCUSERVE INJECT ]###############################`);
 				this.fable.QuackageProcess.execute(
 					tmpDocuserveLocation,
 					[
@@ -179,14 +200,14 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				);
 			}.bind(this));
 
-		// Step 5: Stamp meaningful <title> and <meta name="description">
+		// Step 6: Stamp meaningful <title> and <meta name="description">
 		// into the freshly-injected index.html so social-card scrapers
 		// (Slack, etc.) read the module name + version instead of the
 		// generic "powered by pict-docuserve" boilerplate.
 		tmpAnticipate.anticipate(
 			function (fNext)
 			{
-				this.log.info(`###############################[ STEP 5: STAMP HTML METADATA ]###############################`);
+				this.log.info(`###############################[ STEP 6: STAMP HTML METADATA ]###############################`);
 				try
 				{
 					let tmpIndexPath = libPath.join(tmpDocsFolder, 'index.html');

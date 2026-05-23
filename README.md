@@ -1,5 +1,7 @@
 # Quackage
 
+> **[&#9654; Read the Quackage Documentation](https://stevenvelozo.github.io/quackage/)** &mdash; interactive docs with the full API reference.
+
 Package.  Test.  Duck.  Name a more iconic trio.
 
 Who doesn't love managing configuration and tooling?  I can tell you who doesn't love it.  I don't love it.

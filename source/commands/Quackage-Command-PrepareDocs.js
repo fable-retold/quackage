@@ -121,6 +121,28 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 				);
 			}.bind(this));
 
+		// Step 1b: Stage section-playground runtime bundles into the docs
+		// folder.  Reads docs/_playground.json and copies every Imports[]
+		// entry with `Source: "local"` from its resolved UMD bundle into
+		// the declared Path (default `playground/runtime/<Name>.min.js`).
+		// Clean no-op for modules without a _playground.json — safe to run
+		// everywhere.
+		tmpAnticipate.anticipate(
+			function (fNext)
+			{
+				this.log.info(`###############################[ STEP 1b: STAGE PLAYGROUND RUNTIME ]###############################`);
+				this.fable.QuackageProcess.execute(
+					tmpDocuserveLocation,
+					[
+						'stage-playground',
+						tmpDocsFolder,
+						'-m', tmpDirectoryRoot
+					],
+					{ cwd: this.fable.AppData.CWD },
+					fNext
+				);
+			}.bind(this));
+
 		// Step 2: Generate the documentation catalog
 		tmpAnticipate.anticipate(
 			function (fNext)

@@ -15,7 +15,7 @@ class QuackageCommandIndoctrinate extends libCommandLineCommand
 
 		this.options.CommandOptions.push({ Name: '-d, --directory_root [directory_root]', Description: 'Root directory to scan for modules (defaults to CWD).', Default: '' });
 		this.options.CommandOptions.push({ Name: '-b, --branch [branch]', Description: 'Git branch for GitHub raw URLs (defaults to master).', Default: 'master' });
-		this.options.CommandOptions.push({ Name: '-g, --github_org [github_org]', Description: 'GitHub organization for raw URLs (defaults to stevenvelozo).', Default: 'stevenvelozo' });
+		this.options.CommandOptions.push({ Name: '-g, --github_org [github_org]', Description: 'GitHub organization for raw URLs (defaults to fable-retold).', Default: 'fable-retold' });
 
 		this.options.Aliases.push('indoc');
 
@@ -27,7 +27,7 @@ class QuackageCommandIndoctrinate extends libCommandLineCommand
 		let tmpDocsFolder = libPath.resolve(this.ArgumentString || '.');
 		let tmpDirectoryRoot = this.CommandOptions.directory_root || this.fable.AppData.CWD;
 		let tmpBranch = this.CommandOptions.branch || 'master';
-		let tmpGitHubOrg = this.CommandOptions.github_org || 'stevenvelozo';
+		let tmpGitHubOrg = this.CommandOptions.github_org || 'fable-retold';
 		let tmpOutputFile = libPath.join(tmpDocsFolder, 'retold-catalog.json');
 
 		this.log.info(`Generating documentation catalog with indoctrinate...`);

@@ -16,7 +16,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 
 		this.options.CommandOptions.push({ Name: '-d, --directory_root [directory_root]', Description: 'Root directory to scan for modules (defaults to CWD).', Default: '' });
 		this.options.CommandOptions.push({ Name: '-b, --branch [branch]', Description: 'Git branch for GitHub raw URLs (defaults to master).', Default: 'master' });
-		this.options.CommandOptions.push({ Name: '-g, --github_org [github_org]', Description: 'GitHub organization for raw URLs (defaults to stevenvelozo).', Default: 'stevenvelozo' });
+		this.options.CommandOptions.push({ Name: '-g, --github_org [github_org]', Description: 'GitHub organization for raw URLs (defaults to fable-retold).', Default: 'fable-retold' });
 		this.options.CommandOptions.push({ Name: '-x, --excluded_modules [excluded_modules]', Description: 'Comma-separated list of module names to exclude from the catalog and keyword index.  Merged with any ExcludedModules list in indoctrinate\'s loaded config file (e.g. .indoctrinate.config.json).', Default: '' });
 		this.options.CommandOptions.push({ Name: '--docs_mode [docs_mode]', Description: 'Documentation scan mode: "module" (one module\'s docs/) or "ecosystem" (a folder of <group>/<module> repos).  Auto-detected when omitted — "module" when the scan root has a package.json, else "ecosystem".', Default: '' });
 
@@ -31,7 +31,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 		let tmpDocsFolder = libPath.resolve(this.ArgumentString || './docs');
 		let tmpDirectoryRoot = this.CommandOptions.directory_root || this.fable.AppData.CWD;
 		let tmpBranch = this.CommandOptions.branch || 'master';
-		let tmpGitHubOrg = this.CommandOptions.github_org || 'stevenvelozo';
+		let tmpGitHubOrg = this.CommandOptions.github_org || 'fable-retold';
 
 		// Exclusion list passthrough. When set, both indoctrinate sub-commands
 		// get -x <list>.  Comma-separated; indoctrinate will merge this with

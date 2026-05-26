@@ -60,7 +60,7 @@ class QuackageCommandDockerInit extends libCommandLineCommand
 		}
 
 		let tmpImageName = tmpPkg.name;
-		let tmpOwner = this._inferGithubOwner(tmpPkg) || 'stevenvelozo';
+		let tmpOwner = this._inferGithubOwner(tmpPkg) || 'fable-retold';
 		let tmpVersion = tmpPkg.version || '0.0.0';
 
 		let tmpSubstitutions =

@@ -1,7 +1,7 @@
 {
 	"Name": "quackage",
-	"Version": "1.2.5",
+	"Version": "1.3.0",
 	"Description": "Building.  Testing.  Quacking.  Reloading.",
-	"GeneratedAt": "2026-05-26T18:25:52.683Z",
-	"GitCommit": "49add22"
+	"GeneratedAt": "2026-05-26T21:14:57.578Z",
+	"GitCommit": "c8ce5d9"
 }

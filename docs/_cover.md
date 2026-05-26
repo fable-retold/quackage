@@ -10,4 +10,4 @@ A CLI toolkit for managing, building, testing and documenting JavaScript/Node.js
 
 [Get Started](README.md)
 [Command Reference](commands/documentation/README.md)
-[GitHub](https://github.com/stevenvelozo/quackage)
+[GitHub](https://github.com/fable-retold/quackage)

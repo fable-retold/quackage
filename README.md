@@ -1,6 +1,6 @@
 # Quackage
 
-> **[&#9654; Read the Quackage Documentation](https://stevenvelozo.github.io/quackage/)** &mdash; interactive docs with the full API reference.
+> **[&#9654; Read the Quackage Documentation](https://fable-retold.github.io/quackage/)** &mdash; interactive docs with the full API reference.
 
 Package.  Test.  Duck.  Name a more iconic trio.
 
@@ -55,7 +55,7 @@ npx quack enhance-my-package
 
 ## Related Packages
 
-- [indoctrinate](https://github.com/stevenvelozo/indoctrinate) - Documentation scaffolding
+- [indoctrinate](https://github.com/fable-retold/indoctrinate) - Documentation scaffolding
 
 ## License
 

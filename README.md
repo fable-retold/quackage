@@ -20,7 +20,7 @@ This standardizes:
 
 ## Usage
 
-First you need to install the thing.  The easy way is npm or whatever you use to get your packages, which installs the package and puts a couple commands in your node_modules/.bin folder.  You run it either with `quack` or `q` for short.
+First you need to install the thing.  The easy way is npm or whatever you use to get your packages, which installs the package and puts a couple commands in your node_modules/.bin folder.  You run it either with `quack` or `qua` for short.
 
 ```shell
 npm install --save-dev quackage
@@ -28,10 +28,10 @@ npm install --save-dev quackage
 
 Second, quack like a duck.  
 
-### For instance, you can check your build configurations:
+### For instance, you can check your dependencies:
 
 ```shell
-npx quack check-build
+npx quack check-dependencies
 ```
 
 
@@ -50,7 +50,7 @@ npx quack test
 ## If you hate this, you can always inject commands into your `package.json` file:
 
 ```shell
-npx quack enhance-my-package
+npx quack updatepackage
 ```
 
 ## Related Packages

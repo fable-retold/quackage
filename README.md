@@ -1,6 +1,6 @@
 # Quackage
 
-> **[&#9654; Read the Quackage Documentation](https://fable-retold.github.io/quackage/)** &mdash; interactive docs with the full API reference.
+> **[Read the Quackage Documentation](https://fable-retold.github.io/quackage/)** - interactive docs with the full API reference.
 
 Package.  Test.  Duck.  Name a more iconic trio.
 

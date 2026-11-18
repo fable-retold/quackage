@@ -42,7 +42,18 @@ class QuackageCommandBuild extends libCommandLineCommand
 		}
 		if (!libFS.existsSync(tmpMochaLocation))
 		{
-			let tmpErrorMessage = `Not even the git checkout location has an installation of mocha at [${tmpMochaLocation}]... building cannot commence.  We also tried CWD [${tmpCWDMochaLocation}] and relative node_modules [${tmpRelativePackageMochaLocation}].  Sorry!  Maybe you need to run "npm install" somewhere??`;
+			// Last, walk up from CWD the way node resolves packages, so a module
+			// in a monorepo finds the mocha installed in an ancestor's node_modules.
+			let tmpAncestorMochaLocation = this.fable.QuackageProcess.findAncestorExecutable(this.fable.AppData.CWD, 'mocha');
+			if (tmpAncestorMochaLocation)
+			{
+				this.log.info(`Git repository location does not contain an installation of mocha at [${tmpGitRepositoryMochaLocation}]; using the one in an ancestor folder of CWD.`);
+				tmpMochaLocation = tmpAncestorMochaLocation;
+			}
+		}
+		if (!libFS.existsSync(tmpMochaLocation))
+		{
+			let tmpErrorMessage = `Not even the git checkout location has an installation of mocha at [${tmpMochaLocation}]... building cannot commence.  We also tried CWD [${tmpCWDMochaLocation}], relative node_modules [${tmpRelativePackageMochaLocation}] and every node_modules/.bin above CWD.  Sorry!  Maybe you need to run "npm install" somewhere??`;
 			this.log.info(tmpErrorMessage)
 			return fCallback(new Error(tmpErrorMessage));
 		}

@@ -44,6 +44,12 @@ Runs `pict-docuserve inject` to copy the web application assets into the docs fo
 
 Writes a `.nojekyll` file for GitHub Pages compatibility.
 
+### Exit Status
+
+If the catalog, keyword index or inject step exits non-zero, preparation stops there. `quack prepare-docs` then exits with that step's exit code.
+
+Before those steps, prepare-docs also runs `pict-docuserve stage-examples` and `pict-docuserve stage-playground`. These are optional. If one fails, it logs a warning and preparation carries on. This also covers a pict-docuserve that is too old to have those subcommands.
+
 ## Example
 
 ```bash

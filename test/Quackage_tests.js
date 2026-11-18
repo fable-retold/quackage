@@ -6,11 +6,42 @@
 
 var libQuackage = require('../source/Quackage-CLIProgram.js');
 
+var libChildProcess = require('child_process');
 var libFS = require('fs');
+var libOS = require('os');
 var libPath = require('path');
 
 var Chai = require("chai");
 var Expect = Chai.expect;
+
+// A tiny script that exits with whatever code (or signal) it is asked to
+var EXIT_FIXTURE = libPath.join(__dirname, 'fixtures', 'Quackage-Exit-With-Code.js');
+// The quack command line entry point, as npm runs it for `npx quack`
+var QUACK_RUN = libPath.join(__dirname, '..', 'source', 'Quackage-Run.js');
+// The mocha executable script, so a scratch module can run `quack test` without an npm install
+var MOCHA_BIN = libPath.join(libPath.dirname(require.resolve('mocha/package.json')), 'bin', 'mocha.js');
+
+// Make a scratch module (package.json + one mocha test file) in the OS temp folder
+var createScratchModule = function(pName, pTestSource)
+{
+	let tmpModuleFolder = libFS.mkdtempSync(libPath.join(libOS.tmpdir(), `quackage-${pName}-`));
+	libFS.mkdirSync(libPath.join(tmpModuleFolder, 'test'));
+	libFS.mkdirSync(libPath.join(tmpModuleFolder, 'node_modules', '.bin'), { recursive: true });
+	libFS.writeFileSync(libPath.join(tmpModuleFolder, 'package.json'), JSON.stringify({ name: pName, version: '0.0.0' }));
+	libFS.writeFileSync(libPath.join(tmpModuleFolder, 'test', `${pName}_tests.js`), pTestSource);
+	libFS.symlinkSync(MOCHA_BIN, libPath.join(tmpModuleFolder, 'node_modules', '.bin', 'mocha'));
+	return tmpModuleFolder;
+};
+
+// Run `quack <pArguments>` as its own process and report its exit code and output
+var runQuack = function(pArguments, pCWD, fCallback)
+{
+	let tmpOutput = '';
+	let tmpQuack = libChildProcess.spawn(process.execPath, [QUACK_RUN].concat(pArguments), { cwd: pCWD });
+	tmpQuack.stdout.on('data', (pData) => { tmpOutput += pData.toString(); });
+	tmpQuack.stderr.on('data', (pData) => { tmpOutput += pData.toString(); });
+	tmpQuack.on('close', (pCode, pSignal) => { return fCallback(pCode, pSignal, tmpOutput); });
+};
 
 // Helper to get the list of registered commander command names
 var getCommandNames = function()
@@ -886,6 +917,377 @@ suite
 					function()
 					{
 						Expect(libQuackage.ProgramConfiguration.GulpfileConfiguration).to.be.an('object');
+					}
+				);
+			}
+		);
+
+		suite
+		(
+			'QuackageProcess Exit Codes',
+			function()
+			{
+				test
+				(
+					'execute should call back without an error when the child exits 0.',
+					function(fDone)
+					{
+						libQuackage.QuackageProcess.execute(process.execPath, [EXIT_FIXTURE, '0'], {},
+							(pError) =>
+							{
+								Expect(pError).to.equal(undefined);
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'execute should call back with an Error carrying the code when the child exits 3.',
+					function(fDone)
+					{
+						libQuackage.QuackageProcess.execute(process.execPath, [EXIT_FIXTURE, '3'], {},
+							(pError) =>
+							{
+								Expect(pError).to.be.an('error');
+								Expect(pError.ExitCode).to.equal(3);
+								Expect(pError.Signal).to.equal(null);
+								Expect(pError.Process).to.equal(process.execPath);
+								Expect(pError.message).to.include('exited with code 3');
+								Expect(libQuackage.QuackageProcess.exitCodeFromError(pError)).to.equal(3);
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'execute should call back with an Error when a signal kills the child.',
+					function(fDone)
+					{
+						if (process.platform === 'win32')
+						{
+							// Windows has no POSIX signals to kill the fixture with.
+							return this.skip();
+						}
+						libQuackage.QuackageProcess.execute(process.execPath, [EXIT_FIXTURE, 'SIGTERM'], {},
+							(pError) =>
+							{
+								Expect(pError).to.be.an('error');
+								Expect(pError.Signal).to.equal('SIGTERM');
+								Expect(pError.ExitCode).to.equal(128 + libOS.constants.signals.SIGTERM);
+								Expect(pError.message).to.include('SIGTERM');
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'execute should call back exactly once with an Error when the executable does not exist.',
+					function(fDone)
+					{
+						let tmpCallbackCount = 0;
+						let tmpCallbackError = null;
+						libQuackage.QuackageProcess.execute('/this/quackage/executable/does/not/exist', [], {},
+							(pError) =>
+							{
+								tmpCallbackCount++;
+								tmpCallbackError = pError;
+							});
+						// A spawn failure emits 'error' and then 'close'; give both time to arrive.
+						setTimeout(
+							() =>
+							{
+								Expect(tmpCallbackCount).to.equal(1);
+								Expect(tmpCallbackError).to.be.an('error');
+								Expect(tmpCallbackError.code).to.equal('ENOENT');
+								Expect(libQuackage.QuackageProcess.exitCodeFromError(tmpCallbackError)).to.equal(1);
+								return fDone();
+							}, 250);
+					}
+				);
+
+				test
+				(
+					'exitCodeFromError should fall back to 1 when there is no child exit code.',
+					function()
+					{
+						let tmpProcess = libQuackage.QuackageProcess;
+						Expect(tmpProcess.exitCodeFromError(new Error('No exit code here'))).to.equal(1);
+						Expect(tmpProcess.exitCodeFromError('a string error')).to.equal(1);
+						Expect(tmpProcess.exitCodeFromError(undefined)).to.equal(1);
+
+						let tmpZeroError = new Error('An exit code of 0 is not a failure code');
+						tmpZeroError.ExitCode = 0;
+						Expect(tmpProcess.exitCodeFromError(tmpZeroError)).to.equal(1);
+
+						let tmpChildError = new Error('Child failed');
+						tmpChildError.ExitCode = 34;
+						Expect(tmpProcess.exitCodeFromError(tmpChildError)).to.equal(34);
+					}
+				);
+
+				test
+				(
+					'findAncestorExecutable should find node_modules/.bin in a folder above the start folder.',
+					function()
+					{
+						let tmpRoot = libFS.mkdtempSync(libPath.join(libOS.tmpdir(), 'quackage-ancestor-'));
+						try
+						{
+							let tmpToolName = `quackage-ancestor-tool-${process.pid}`;
+							let tmpBinFolder = libPath.join(tmpRoot, 'node_modules', '.bin');
+							let tmpStartFolder = libPath.join(tmpRoot, 'modules', 'utility', 'some-module');
+							libFS.mkdirSync(tmpBinFolder, { recursive: true });
+							libFS.mkdirSync(tmpStartFolder, { recursive: true });
+							libFS.writeFileSync(libPath.join(tmpBinFolder, tmpToolName), '');
+
+							let tmpProcess = libQuackage.QuackageProcess;
+							Expect(tmpProcess.findAncestorExecutable(tmpStartFolder, tmpToolName)).to.equal(libPath.join(tmpBinFolder, tmpToolName));
+							// Nothing by this name exists anywhere above the start folder.
+							Expect(tmpProcess.findAncestorExecutable(tmpStartFolder, `${tmpToolName}-missing`)).to.equal(false);
+						}
+						finally
+						{
+							libFS.rmSync(tmpRoot, { recursive: true, force: true });
+						}
+					}
+				);
+			}
+		);
+
+		suite
+		(
+			'Quack Command Exit Codes',
+			function()
+			{
+				let tmpScratchFolders = [];
+
+				teardown
+				(
+					function()
+					{
+						while (tmpScratchFolders.length > 0)
+						{
+							libFS.rmSync(tmpScratchFolders.pop(), { recursive: true, force: true });
+						}
+					}
+				);
+
+				test
+				(
+					'quack test should exit non-zero with mocha\'s code when tests fail.',
+					function(fDone)
+					{
+						this.timeout(30000);
+						let tmpModuleFolder = createScratchModule('failing',
+							[
+								`suite('Failing Module', function()`,
+								`{`,
+								`	test('passes', function() {});`,
+								`	test('fails once', function() { throw new Error('Expected failure one'); });`,
+								`	test('fails twice', function() { throw new Error('Expected failure two'); });`,
+								`});`
+							].join('\n'));
+						tmpScratchFolders.push(tmpModuleFolder);
+
+						runQuack(['test'], tmpModuleFolder,
+							(pCode, pSignal, pOutput) =>
+							{
+								// Mocha exits with the number of failed tests; quack passes that through.
+								Expect(pCode).to.equal(2, pOutput);
+								Expect(pOutput).to.include('2 failing');
+								Expect(pOutput).to.include('Expected failure two');
+								Expect(pOutput).to.not.include('Process completed successfully');
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'quack test should exit 0 when every test passes.',
+					function(fDone)
+					{
+						this.timeout(30000);
+						let tmpModuleFolder = createScratchModule('passing',
+							[
+								`suite('Passing Module', function()`,
+								`{`,
+								`	test('passes', function() {});`,
+								`});`
+							].join('\n'));
+						tmpScratchFolders.push(tmpModuleFolder);
+
+						runQuack(['test'], tmpModuleFolder,
+							(pCode, pSignal, pOutput) =>
+							{
+								Expect(pCode).to.equal(0, pOutput);
+								Expect(pOutput).to.include('1 passing');
+								Expect(pOutput).to.include('Process completed successfully');
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'quack should exit 1 when a command fails before running any process.',
+					function(fDone)
+					{
+						this.timeout(30000);
+						// docs-serve calls back with an Error straight away when the docs folder is missing.
+						let tmpModuleFolder = createScratchModule('missingdocs', '');
+						tmpScratchFolders.push(tmpModuleFolder);
+
+						runQuack(['docs-serve', './this-docs-folder-does-not-exist'], tmpModuleFolder,
+							(pCode, pSignal, pOutput) =>
+							{
+								Expect(pCode).to.equal(1, pOutput);
+								Expect(pOutput).to.include('Documentation folder not found');
+								Expect(pOutput).to.include('Quackage command failed; exiting with code 1');
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'run-mocha-tests should fail with an Error when mocha cannot be found.',
+					function(fDone)
+					{
+						let tmpCommand = Object.values(libQuackage.servicesMap.CommandLineCommand).find(
+							(pCommand) => pCommand.options.CommandKeyword === 'run-mocha-tests');
+						Expect(tmpCommand).to.be.an('object');
+
+						// Hide every mocha executable so each place quack looks comes up empty.
+						let fOriginalExistsSync = libFS.existsSync;
+						libFS.existsSync = (pPath) =>
+						{
+							return (libPath.basename(String(pPath)) === 'mocha') ? false : fOriginalExistsSync(pPath);
+						};
+						let fRestore = () => { libFS.existsSync = fOriginalExistsSync; };
+
+						// Commander calls a command's action with (options, command).
+						tmpCommand.runPromise({}, {}).then(
+							() =>
+							{
+								fRestore();
+								return fDone(new Error('run-mocha-tests resolved even though mocha could not be found.'));
+							},
+							(pError) =>
+							{
+								fRestore();
+								try
+								{
+									Expect(pError).to.be.an('error');
+									Expect(pError.message).to.include('installation of mocha');
+									Expect(libQuackage.QuackageProcess.exitCodeFromError(pError)).to.equal(1);
+								}
+								catch (pAssertionError)
+								{
+									return fDone(pAssertionError);
+								}
+								return fDone();
+							});
+					}
+				);
+			}
+		);
+
+		suite
+		(
+			'Example Build Failures',
+			function()
+			{
+				let tmpScratchFolders = [];
+
+				// Make an example_applications folder of buildable examples (each
+				// with node_modules, so no npm install is attempted).
+				let createExamplesFolder = function(pExampleNames)
+				{
+					let tmpExamplesFolder = libFS.mkdtempSync(libPath.join(libOS.tmpdir(), 'quackage-examples-'));
+					for (let i = 0; i < pExampleNames.length; i++)
+					{
+						let tmpExampleFolder = libPath.join(tmpExamplesFolder, pExampleNames[i]);
+						libFS.mkdirSync(libPath.join(tmpExampleFolder, 'node_modules'), { recursive: true });
+						libFS.writeFileSync(libPath.join(tmpExampleFolder, 'package.json'),
+							JSON.stringify({ name: pExampleNames[i], scripts: { build: 'npx quack build' } }));
+					}
+					tmpScratchFolders.push(tmpExamplesFolder);
+					return tmpExamplesFolder;
+				};
+
+				// Stand in for the process runner: record which example was built,
+				// failing the build for the names in pFailingExamples.
+				let stubExecute = function(pBuiltExamples, pFailingExamples)
+				{
+					libQuackage.QuackageProcess.execute = (pProcess, pArguments, pOptions, fCallback) =>
+					{
+						let tmpExampleName = libPath.basename(pOptions.cwd);
+						pBuiltExamples.push(tmpExampleName);
+						if (pFailingExamples.indexOf(tmpExampleName) > -1)
+						{
+							let tmpError = new Error(`Process [${pProcess}] exited with code 3.`);
+							tmpError.ExitCode = 3;
+							return fCallback(tmpError);
+						}
+						return fCallback();
+					};
+				};
+
+				teardown
+				(
+					function()
+					{
+						// Drop the stub so the prototype's execute() is used again.
+						delete libQuackage.QuackageProcess.execute;
+						while (tmpScratchFolders.length > 0)
+						{
+							libFS.rmSync(tmpScratchFolders.pop(), { recursive: true, force: true });
+						}
+					}
+				);
+
+				test
+				(
+					'buildExamples should keep building after a failure, then report the failed examples.',
+					function(fDone)
+					{
+						let tmpExamplesFolder = createExamplesFolder(['app_a', 'app_b', 'app_c']);
+						let tmpBuiltExamples = [];
+						stubExecute(tmpBuiltExamples, ['app_b']);
+
+						libQuackage.QuackageExampleService.buildExamples(tmpExamplesFolder,
+							(pError) =>
+							{
+								Expect(tmpBuiltExamples).to.have.members(['app_a', 'app_b', 'app_c']);
+								Expect(pError).to.be.an('error');
+								Expect(pError.message).to.include('1 of 3');
+								Expect(pError.message).to.include('app_b');
+								Expect(pError.message).to.not.include('app_a');
+								return fDone();
+							});
+					}
+				);
+
+				test
+				(
+					'buildExamples should call back without an error when every example builds.',
+					function(fDone)
+					{
+						let tmpExamplesFolder = createExamplesFolder(['app_a', 'app_b']);
+						let tmpBuiltExamples = [];
+						stubExecute(tmpBuiltExamples, []);
+
+						libQuackage.QuackageExampleService.buildExamples(tmpExamplesFolder,
+							(pError) =>
+							{
+								Expect(tmpBuiltExamples).to.have.members(['app_a', 'app_b']);
+								Expect(pError).to.equal(undefined);
+								return fDone();
+							});
 					}
 				);
 			}

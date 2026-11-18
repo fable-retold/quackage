@@ -70,6 +70,41 @@ let _Pict = new libCLIProgram(
 		require('pict-provider-theme/source/cli/Quackage-Command-ThemeScreenshot.js')
 	]);
 
+// Make sure a command's failure always reaches quack's exit code.
+//
+// Each command runs its onBeforeRunAsync / onRunAsync / onAfterRunAsync phases
+// through a fable Anticipate, and the command only registers its wait() after
+// queueing all three.  A phase that calls back synchronously runs (and
+// finishes) while it is being queued, and Anticipate drops an error that
+// arrives before any wait() exists.  So an early `return fCallback(new Error())`
+// -- "mocha not found", "gulp not found", "docs folder not found" -- used to
+// let quack exit 0.  Handing each phase's outcome back on the next turn of the
+// event loop means the wait() is always registered first, so the error reaches
+// the command's promise and Quackage-Run.js exits non-zero.
+const QUACKAGE_COMMAND_PHASES = ['onBeforeRunAsync', 'onRunAsync', 'onAfterRunAsync'];
+let tmpCommandServices = _Pict.servicesMap.CommandLineCommand || {};
+let tmpCommandHashes = Object.keys(tmpCommandServices);
+for (let i = 0; i < tmpCommandHashes.length; i++)
+{
+	let tmpCommand = tmpCommandServices[tmpCommandHashes[i]];
+	for (let j = 0; j < QUACKAGE_COMMAND_PHASES.length; j++)
+	{
+		let fPhase = tmpCommand[QUACKAGE_COMMAND_PHASES[j]];
+		if (typeof (fPhase) !== 'function')
+		{
+			continue;
+		}
+		tmpCommand[QUACKAGE_COMMAND_PHASES[j]] = function (fCallback)
+		{
+			return fPhase.call(tmpCommand,
+				(pError, pResult) =>
+				{
+					setImmediate(() => { return fCallback(pError, pResult); });
+				});
+		};
+	}
+}
+
 // Instantiate the file persistence service
 _Pict.instantiateServiceProvider('FilePersistence');
 _Pict.instantiateServiceProvider('DataGeneration');

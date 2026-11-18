@@ -45,6 +45,10 @@ The build reads configuration from `.quackage.json` (or the defaults). Key field
 }
 ```
 
+### Exit Status
+
+If Gulp exits non-zero for a build target, the build stops there and does not run any later targets. `quack build` then exits with Gulp's exit code, so a `build` or `prepublishOnly` script fails with it.
+
 ## Customization
 
 To customize build targets, create a `.quackage.json` in your project root and override the `GulpExecutions` array:

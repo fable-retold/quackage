@@ -313,6 +313,18 @@ ${tmpExampleListItems}		</ul>
 
 		this.log.info(`Found ${tmpExampleFolders.length} example application(s) to build.`);
 
+		// One failed example does not stop the others from building; the
+		// failures are collected and reported once every example has had its
+		// turn, so `quack examples-build` still exits non-zero.
+		let tmpFailedExamples = [];
+		let fRecordFailure = (pExampleName) =>
+		{
+			if (tmpFailedExamples.indexOf(pExampleName) < 0)
+			{
+				tmpFailedExamples.push(pExampleName);
+			}
+		};
+
 		// Build each example in series
 		this.fable.Utility.eachLimit(
 			tmpExampleFolders, 1,
@@ -328,6 +340,7 @@ ${tmpExampleListItems}		</ul>
 				catch (pError)
 				{
 					this.log.error(`Error reading package.json for [${pExample.Name}]: ${pError.message}`);
+					fRecordFailure(pExample.Name);
 					return fExampleCallback();
 				}
 
@@ -353,6 +366,7 @@ ${tmpExampleListItems}		</ul>
 							if (pBuildError)
 							{
 								this.log.error(`Build error in [${pExample.Name}]: ${pBuildError.message}`);
+								fRecordFailure(pExample.Name);
 							}
 
 							if (tmpPackage.copyFiles || tmpPackage.copyFilesSettings)
@@ -367,6 +381,7 @@ ${tmpExampleListItems}		</ul>
 										if (pCopyError)
 										{
 											this.log.error(`Copy error in [${pExample.Name}]: ${pCopyError.message}`);
+											fRecordFailure(pExample.Name);
 										}
 										return fExampleCallback();
 									});
@@ -390,6 +405,7 @@ ${tmpExampleListItems}		</ul>
 							if (pInstallError)
 							{
 								this.log.error(`Install error in [${pExample.Name}]: ${pInstallError.message}`);
+								fRecordFailure(pExample.Name);
 								return fExampleCallback();
 							}
 							tmpRunBuild();
@@ -405,12 +421,16 @@ ${tmpExampleListItems}		</ul>
 				if (pError)
 				{
 					this.log.error(`Error building examples: ${pError.message}`);
+					return fCallback(pError);
 				}
-				else
+				if (tmpFailedExamples.length > 0)
 				{
-					this.log.info(`All examples built successfully!`);
+					let tmpErrorMessage = `${tmpFailedExamples.length} of ${tmpExampleFolders.length} example(s) failed to build: ${tmpFailedExamples.join(', ')}`;
+					this.log.error(tmpErrorMessage);
+					return fCallback(new Error(tmpErrorMessage));
 				}
-				return fCallback(pError);
+				this.log.info(`All examples built successfully!`);
+				return fCallback();
 			});
 	}
 

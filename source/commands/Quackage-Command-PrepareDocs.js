@@ -100,6 +100,23 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 
 		let tmpAnticipate = this.fable.newAnticipate();
 
+		// Steps 1 and 1b are optional extras that are meant to be safe to run
+		// everywhere, so a failure there is reported but does not stop the
+		// catalog, keyword index and asset injection.  That includes a
+		// pict-docuserve older than the stage-examples / stage-playground
+		// subcommands (before 1.3.2 / 1.4.1), which rejects them with exit 1.
+		let fOptionalStepComplete = (pStepName, fNext) =>
+		{
+			return (pError) =>
+			{
+				if (pError)
+				{
+					this.log.warn(`Optional step [${pStepName}] did not complete (${pError.message}); continuing with documentation preparation.`);
+				}
+				return fNext();
+			};
+		};
+
 		// Step 1: Build and stage flagged example applications into the docs
 		// folder.  Runs first so any generated example index / quick-links
 		// markdown is on disk before the keyword index scans it into search.
@@ -117,7 +134,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 						'-m', tmpDirectoryRoot
 					],
 					{ cwd: this.fable.AppData.CWD },
-					fNext
+					fOptionalStepComplete('stage-examples', fNext)
 				);
 			}.bind(this));
 
@@ -139,7 +156,7 @@ class QuackageCommandPrepareDocs extends libCommandLineCommand
 						'-m', tmpDirectoryRoot
 					],
 					{ cwd: this.fable.AppData.CWD },
-					fNext
+					fOptionalStepComplete('stage-playground', fNext)
 				);
 			}.bind(this));
 
